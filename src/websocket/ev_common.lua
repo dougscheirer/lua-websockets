@@ -50,7 +50,7 @@ local async_send = function(sock,loop)
         -- the send io to let send_async(_,on_sent,_) truely
         -- behave async.
         if write_io:is_active() then
-          
+
           callbacks.on_sent(copy)
         else
           -- on_sent is only defined when responding to "on message for close op"
@@ -111,7 +111,7 @@ local message_io = function(sock,loop,on_message,on_error)
     while message_io:is_active() do
       local encoded,err,part = sock:receive(100000)
       if err then
-        if err == 'timeout' and #part == 0 then
+        if (err == 'timeout' or err == 'wantread') and #part == 0 then
           return
         elseif #part == 0 then
           if message_io then
@@ -127,7 +127,7 @@ local message_io = function(sock,loop,on_message,on_error)
       else
         encoded = encoded or part
       end
-      
+
       repeat
         local decoded,fin,opcode,rest = frame.decode(encoded)
         if decoded then

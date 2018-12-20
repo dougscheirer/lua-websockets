@@ -4,6 +4,8 @@ local tools = require'websocket.tools'
 local frame = require'websocket.frame'
 local handshake = require'websocket.handshake'
 local debug = require'debug'
+local ssl = require'ssl'
+
 local tconcat = table.concat
 local tinsert = table.insert
 
@@ -44,7 +46,9 @@ local ev = function(ws)
       message_io = nil
     end
     if sock then
-      sock:shutdown()
+      if sock.shutdown ~= nil then
+        sock:shutdown()
+      end
       sock:close()
       sock = nil
     end
@@ -106,13 +110,13 @@ local ev = function(ws)
     async_send(encoded, nil, handle_socket_err)
   end
 
-  self.connect = function(_,url,ws_protocol)
+  self.connect = function(_,url,ws_protocol,ssl_params)
     if self.state ~= 'CLOSED' then
       on_error('wrong state',true)
       return
     end
     local protocol,host,port,uri = tools.parse_url(url)
-    if protocol ~= 'ws' then
+    if protocol ~= 'ws' and protocol ~= 'wss' then
       on_error('bad protocol')
       return
     end
@@ -127,12 +131,15 @@ local ev = function(ws)
     sock = socket.tcp()
     fd = sock:getfd()
     assert(fd > -1)
-    -- set non blocking
-    sock:settimeout(0)
+    -- set non blocking for non-ssl
+    if protocol ~= 'wss' then
+      sock:settimeout(0)
+    end
     sock:setoption('tcp-nodelay',true)
-    async_send,send_io_stop = require'websocket.ev_common'.async_send(sock,loop)
+
     handshake_io = ev.IO.new(
       function(loop,connect_io)
+        async_send,send_io_stop = require'websocket.ev_common'.async_send(sock,loop)
         connect_io:stop(loop)
         local key = tools.generate_key()
         local req = handshake.upgrade_request
@@ -190,7 +197,15 @@ local ev = function(ws)
           end,
         handle_socket_err)
       end,fd,ev.WRITE)
-    local connected,err = sock:connect(host,port)
+    local connected, err = sock:connect(host,port)
+    if connected then
+      if protocol == 'wss' then
+        sock = ssl.wrap(sock, ssl_params)
+        sock:dohandshake()
+        -- now set the timeout to 0
+        sock:settimeout(0)
+      end
+    end
     if connected then
       handshake_io:callback()(loop,handshake_io)
     elseif err == 'timeout' or err == 'Operation already in progress' then
