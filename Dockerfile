@@ -17,9 +17,9 @@ RUN apt-get install ${LUA} ${LUA_DEV} wget libev-dev git-core unzip -y
 RUN lua${LUA_SFX} -v
 WORKDIR /
 RUN wget --quiet https://github.com/keplerproject/luarocks/archive/v$LUAROCKS_VERSION.tar.gz -O $LUAROCKS_BASE.tar.gz
-RUN wget --quiet https://nodejs.org/dist/v4.4.1/node-v4.4.1-linux-x64.tar.gz
-RUN tar xf node-v4.4.1-linux-x64.tar.gz
-ENV PATH /node-v4.4.1-linux-x64/bin:$PATH
+RUN wget --quiet https://nodejs.org/dist/v10.14.2/node-v10.14.2-linux-x64.tar.gz
+RUN tar xf node-v10.14.2-linux-x64.tar.gz
+ENV PATH /node-v10.14.2-linux-x64/bin:$PATH
 RUN node --version
 RUN npm install -g ws
 RUN tar zxpf $LUAROCKS_BASE.tar.gz
@@ -29,6 +29,7 @@ RUN git clone http://github.com/brimworks/lua-ev && cd lua-ev && luarocks make L
 RUN luarocks install LuaCov
 RUN luarocks install lua_cliargs 2.3-3
 RUN luarocks install busted 1.10.0-1
+RUN luarocks install luasec OPENSSL_LIBDIR=/usr/lib/`gcc -print-multiarch`
 ADD . /lua-websockets
 WORKDIR /lua-websockets
 RUN luarocks make rockspecs/lua-websockets-scm-1.rockspec 
