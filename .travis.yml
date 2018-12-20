@@ -11,9 +11,6 @@ env:
     - LUA=luajit LUA_DEV=libluajit-5.1-dev LUA_VER=5.1 LUA_SFX=jit LUA_INCDIR=/usr/include/luajit-2.0
 
 before_install:
-  - if [ $LUA = "luajit" ]; then
-      sudo add-apt-repository ppa:mwild1/ppa -y && sudo apt-get update -y;
-    fi
   - sudo apt-get install $LUA
   - sudo apt-get install $LUA_DEV
   - sudo apt-get install -y libssl-dev
