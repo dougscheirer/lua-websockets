@@ -54,6 +54,11 @@ local ev = function(ws)
     end
   end
 
+  -- utility function for determining the current connect state
+  self.cur_state = function(_)
+    return self.state
+  end
+
   local on_close = function(was_clean,code,reason)
     cleanup()
     self.state = 'CLOSED'
@@ -197,6 +202,7 @@ local ev = function(ws)
           end,
         handle_socket_err)
       end,fd,ev.WRITE)
+
     local connected, err = sock:connect(host,port)
     if connected then
       if protocol == 'wss' then
@@ -206,6 +212,7 @@ local ev = function(ws)
         sock:settimeout(0)
       end
     end
+    
     if connected then
       handshake_io:callback()(loop,handshake_io)
     elseif err == 'timeout' or err == 'Operation already in progress' then

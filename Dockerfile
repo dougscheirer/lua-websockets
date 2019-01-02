@@ -30,6 +30,8 @@ RUN luarocks install LuaCov
 RUN luarocks install lua_cliargs 2.3-3
 RUN luarocks install busted 1.10.0-1
 RUN luarocks install luasec OPENSSL_LIBDIR=/usr/lib/`gcc -print-multiarch`
+RUN luarocks install luabitop 1.0.2-3
+RUN luarocks install copas 2.0.2-1
 ADD . /lua-websockets
 WORKDIR /lua-websockets
 RUN luarocks make rockspecs/lua-websockets-scm-1.rockspec 
