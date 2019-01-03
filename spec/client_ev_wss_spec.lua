@@ -37,24 +37,7 @@ describe(
       function()
         wsc = client.ev()
       end)
-    
-    it(
-      'refuses to connect for insecure ws'..req_ws,
-      function(done)
-        settimeout(3)
-        wsc:on_error(async(function(ws,err)
-              assert.is_equal(ws,wsc)
-              -- for wss connections, the response is failure to establish the connection
-              assert.is_equal(err,'accept failed')
-              ws:on_error()
-              -- make sure to close the connection, connection errors don't do that
-              -- automatically and future tests want a non-CONNECTING state
-              ws:close()
-              done()
-          end))
-        wsc:connect('ws://127.0.0.1:'..port,'echo-protocol',ssl_params)
-      end)
-    
+      
     it(
       'can connect and calls on_open'..req_ws,
       function(done)
@@ -210,11 +193,30 @@ describe(
           end))
         wsc:connect('wss://does_not_exist','echo-protocol',ssl_params)
       end)
+
+    it(
+      'refuses to connect for insecure ws'..req_ws,
+      function(done)
+        settimeout(3)
+        -- clear any close handler
+        wsc:on_close(async(function() end))
+        wsc:on_error(async(function(ws,err)
+              assert.is_equal(ws,wsc)
+              -- for wss connections, the response is failure to establish the connection
+              assert.is_equal(err,'accept failed')
+              ws:on_error()
+              -- make sure to close the connection, connection errors don't do that
+              -- automatically and future tests want a non-CONNECTING state
+              ws:close()
+              done()
+          end))
+        wsc:connect('ws://127.0.0.1:'..port,'echo-protocol',ssl_params)
+      end)
     it(
       'can send and receive data'..req_ws,
       function(done)
         assert(wsc:cur_state() == 'CLOSED','unexpected state:'..wsc:cur_state())
-        wsc = client.ev()
+        -- wsc = client.ev()
 	      settimeout(6.0)
         assert.is_function(wsc.send)
         wsc:on_error(async(function(ws,err)
